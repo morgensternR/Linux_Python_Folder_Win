@@ -14,29 +14,45 @@ config = ujson.load(open('diode_config_plz.json', 'r'))
 
 
 def get_adc(params):
+    
     if params[-1].isdigit():
         index = int(params[0]) - 1 #1-10 give respective diode board, 0 gives index -1 which means all boards, does not exceed max length
-        key = config['sensors'][index].upper()
+        
         if len(sensor_dict) > index >= 0:
+            result = {}
+            key = config['sensors'][index].upper()
+            
             if sensor_dict[key]['mux'] != None:
                 sensor_dict[key]['mux'].write_reg(index)
-            adc = mcp.MCP3421(i2c = sensor_dict[key]['i2c'], slope = sensor_dict[key]['slope correction 16bit'],
-                              offset = sensor_dict[key]['offset correction'])
-            return adc.read_adc_v()
+            result = {key: sensor_dict[key]['adc'].read_adc_v()}
+            return result
+        
         elif index == -1:
             result = {}
             for name in sensor_dict:
                 if sensor_dict[name]['mux'] != None:
                     sensor_dict[name]['mux'].write_reg(sensor_dict[name]['mux port address'])
-                adc = mcp.MCP3421(i2c = sensor_dict[name]['i2c'], slope = sensor_dict[name]['slope correction 16bit'],
-                              offset = sensor_dict[name]['offset correction'])
-                result[name] = adc.read_adc_v()
+                
+                result[name] = sensor_dict[name]['adc'].read_adc_v()
             return result
+        
+        else:  #  handle all other numbers
+            result = 'invalid sensor number for v?'
+            return result
+        
     else:
         key = ''.join(params).upper()
-        adc = mcp.MCP3421(i2c = sensor_dict[key]['i2c'], slope = sensor_dict[key]['slope correction 16bit'],
-                              offset = sensor_dict[key]['offset correction'])
-        return adc.read_adc_v()
+        if key in sensor_dict:
+
+            if sensor_dict[key]['mux'] != None:
+
+                sensor_dict[key]['mux'].write_reg(sensor_dict[key]['mux port address'])
+                
+            result = {key: sensor_dict[key]['adc'].read_adc_v()}
+            return result
+        else:
+            result = 'invalid name of the channel for v?'
+            return result  
                 
             
 #Funciton Builds Sensor dict
@@ -58,8 +74,15 @@ def build_sensors(config):
             
         if sensors[name]['mux port address'] != None:
             sensors[name]['mux'] = mux.TCA9548A(sensors[name]['i2c'])
-        else: sensors[name]['mux'] = None
-        sensors[name]['adc'] = get_adc
+            sensors[name]['mux'].write_reg(sensors[name]['mux port address'])
+            sensors[name]['adc'] = mcp.MCP3421(i2c = sensor_dict[name]['i2c'], slope = sensor_dict[name]['slope correction 16bit'],
+                              offset = sensor_dict[name]['offset correction'])
+        elif sensors[name]['mux port address'] == None:
+            sensors[name]['mux'] = None
+            sensors[name]['adc'] = mcp.MCP3421(i2c = sensor_dict[name]['i2c'], slope = sensor_dict[name]['slope correction 16bit'],
+                              offset = sensor_dict[name]['offset correction'])
+        
+        
     return sensors
 
 sensor_dict = build_sensors(config)
