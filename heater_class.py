@@ -1,21 +1,17 @@
 import time
-import re
+import ujson
 
 class heater:
     def __init__(self, usb_port):
         self.port = usb_port
-    def data_format(self, temp_data):
-        data = re.findall( r'\d+\.\d+', temp_data)
-        return [float(data[0]), float(data[1])]
     
     def read(self):
         heat_meas = []
         for i in range(4):
             string = 'mon? {0}\r\n'.format(i)
             self.port.write(bytes(string, 'utf-8'))
-            temp_data = self.port.readline().decode().strip()
-            print(temp_data)
-            heat_meas.append(self.data_format(temp_data))
+            temp_data = ujson.loads(self.port.readline())
+            heat_meas.append([temp_data[0], temp_data[1]])
             time.sleep(0.1)
         for i in range(1,6):
             string = 'lph? {0}\r\n'.format(i)

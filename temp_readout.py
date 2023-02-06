@@ -14,8 +14,9 @@ import diode_class as d
 import lockin_class as l
 
 heater_port = serial.Serial('/dev/heaters', timeout = 1 )
-diode_port = serial.Serial('/dev/ttyACM0', timeout = 1 )
+diode_port = serial.Serial('/dev/diode', timeout = 1 )
 lockin_port =serial.Serial('/dev/lockins', timeout = 1 )
+
 
 dt670 = np.loadtxt('DT670.csv', delimiter =',', dtype=float)
 DC2018 = np.loadtxt('DC2018.csv', delimiter =',', dtype=float)
@@ -176,7 +177,7 @@ for i in range(1,file.shape[1]):
     if i == 9 or i == 10:
         ax.plot_date(secs, dt670_func(file[:,i]), label = header[i-1])
     else:
-        ax.plot_date(secs, dc2018_func(file[:,i]), label = header[i-1])
+        ax.plot_date(secs, dc2018_func(file[:,i]), label = header[i-1])serial.Serial('/dev/ttyACM0', timeout = 1)
 plt.legend()
 
 # Choose your xtick format string
@@ -231,7 +232,7 @@ def serial_ports():
         :returns:
             A list of the serial ports available on the system
     """
-    if sys.platform.startswith('win'):'
+    if sys.platform.startswith('win'):
         ports = ['COM%s' % (i + 1) for i in range(256)]
     elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
         # this excludes your current terminal "/dev/tty"

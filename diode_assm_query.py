@@ -14,8 +14,8 @@ config = ujson.load(open('diode_config_plz.json', 'r'))
 
 
 def get_adc(params):
-    
-    if params[-1].isdigit():
+    #print(params)
+    if params[0].isdigit():
         index = int(params[0]) - 1 #1-10 give respective diode board, 0 gives index -1 which means all boards, does not exceed max length
         
         if len(sensor_dict) > index >= 0:
@@ -52,7 +52,7 @@ def get_adc(params):
             return result
         else:
             result = 'invalid name of the channel for v?'
-            return result  
+        return result  
                 
             
 #Funciton Builds Sensor dict
@@ -67,20 +67,19 @@ def build_sensors(config):
                 'i2c port' : config['i2c'][i],
                 'i2c interface' : config['i2c interface'][i]
             }
-        if sensors[name]['i2c interface'] == 1: #1 means Hardware I2C
+        try:#Assumes hardware i2c, if fails assumes software i2c
             sensors[name]['i2c'] = I2C(1, scl=Pin(sensors[name]['i2c port'][0]), sda=Pin(sensors[name]['i2c port'][1]))
-        elif sensors[name]['i2c interface'] == 0:
+        except:
             sensors[name]['i2c'] = SoftI2C(scl = Pin(sensors[name]['i2c port'][0]), sda = Pin(sensors[name]['i2c port'][1]))
             
         if sensors[name]['mux port address'] != None:
             sensors[name]['mux'] = mux.TCA9548A(sensors[name]['i2c'])
             sensors[name]['mux'].write_reg(sensors[name]['mux port address'])
-            sensors[name]['adc'] = mcp.MCP3421(i2c = sensor_dict[name]['i2c'], slope = sensor_dict[name]['slope correction 16bit'],
-                              offset = sensor_dict[name]['offset correction'])
-        elif sensors[name]['mux port address'] == None:
+        else:
             sensors[name]['mux'] = None
-            sensors[name]['adc'] = mcp.MCP3421(i2c = sensor_dict[name]['i2c'], slope = sensor_dict[name]['slope correction 16bit'],
-                              offset = sensor_dict[name]['offset correction'])
+            
+        sensors[name]['adc'] = mcp.MCP3421(i2c = sensors[name]['i2c'], slope = sensors[name]['slope correction 16bit'],
+                              offset = sensors[name]['offset correction'])
         
         
     return sensors
