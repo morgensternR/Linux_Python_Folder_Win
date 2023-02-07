@@ -8,7 +8,7 @@ import gc
 import ujson
 
 #Import Json file
-config = ujson.load(open('diode_config_plz.json', 'r'))
+config = ujson.load(open('diode_config.json', 'r'))
 
 
 
@@ -20,7 +20,7 @@ def get_adc(params):
         
         if len(sensor_dict) > index >= 0:
             result = {}
-            key = config['sensors'][index].upper()
+            key = config['sensors'][index]
             
             if sensor_dict[key]['mux'] != None:
                 sensor_dict[key]['mux'].write_reg(index)
@@ -41,7 +41,7 @@ def get_adc(params):
             return result
         
     else:
-        key = ''.join(params).upper()
+        key = ''.join(params)
         if key in sensor_dict:
 
             if sensor_dict[key]['mux'] != None:
@@ -59,7 +59,7 @@ def get_adc(params):
 def build_sensors(config):
     sensors = {}
     for i in range(len(config['sensors'])):
-        name = config['sensors'][i].upper()
+        name = config['sensors'][i]
         sensors[name] = {
                 'mux port address' : config['mux port address'][i],
                 'slope correction 16bit': config['slope correction 16bit'][i],
